@@ -68,7 +68,26 @@ fi
 # and see fancy test results.
 cd e2e
 mkdir -p bin
-GOBIN=`pwd`/bin/ go install gotest.tools/gotestsum@latest
+architecture=$(uname -m)
+
+case "$architecture" in
+  x86_64 | amd64) architecture="amd64" ;;
+  aarch64 | arm64) architecture="arm64" ;;
+  *)
+    echo "Unsupported architecture: $architecture"
+    exit 1
+    ;;
+esac
+
+gotestsum_version="1.13.0"
+gotestsum_archive="gotestsum_${gotestsum_version}_linux_${architecture}.tar.gz"
+gotestsum_url="https://github.com/gotestyourself/gotestsum/releases/download/v${gotestsum_version}/${gotestsum_archive}"
+
+temp_file="$(mktemp)"
+curl -fsSL "$gotestsum_url" -o "$temp_file"
+tar -xzf "$temp_file" -C bin
+chmod +x bin/gotestsum
+rm -f "$temp_file"
 
 # gotestsum configure to only show logs for failed tests, json file for detailed logs
 # Run the tests! Yey!
