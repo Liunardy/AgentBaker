@@ -137,7 +137,7 @@ func startBastionTunnel(
 		return "", 0, fmt.Errorf("failed to start tunnel: %v", err)
 	}
 
-	if err := waitForPort(localPort, 10*time.Second); err != nil {
+	if err := waitForPort(localPort, 30*time.Second); err != nil {
 		cleanupBastionTunnel(localPort, cmd.Process.Pid)
 		return "", 0, fmt.Errorf("failed to wait for port to be ready: %v", err)
 	}
@@ -147,6 +147,10 @@ func startBastionTunnel(
 
 func cleanupBastionTunnel(localPort string, pid int) {
 	// We have to do this because az network tunnel creates a new detached process for tunnel
+	if pid != 0 {
+		_ = syscall.Kill(-pid, syscall.SIGINT)
+	}
+	time.Sleep(1 * time.Second)
 	if pid != 0 {
 		_ = syscall.Kill(-pid, syscall.SIGKILL)
 	}
